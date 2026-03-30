@@ -26,7 +26,14 @@ func EReader(ctx context.Context, cancel context.CancelFunc, scanner *bufio.Scan
 				if !ok {
 					return
 				}
-				decoder.parseAndProcessMsg(msg) // single worker and no go here!!
+				func() {
+					defer func() {
+						if r := recover(); r != nil {
+							log.Error().Interface("panic", r).Msg("recovered from panic in message decoder")
+						}
+					}()
+					decoder.parseAndProcessMsg(msg)
+				}()
 			}
 		}
 	}()
